@@ -6,5 +6,20 @@
     "client-sessions": "^0.8.0",
     "express": "^4.15.3",
     "mongodb": "^2.2.29"
-  }
+  },
+  "description": "A NodeJS application for a leave application submission and approval.",
+  "main": "app.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/vineeth22/leave-app.git"
+  },
+  "author": "Vineeth Suvarna",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/vineeth22/leave-app/issues"
+  },
+  "homepage": "https://github.com/vineeth22/leave-app#readme"
 }

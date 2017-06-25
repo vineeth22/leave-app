@@ -1,7 +1,41 @@
 <head>
     <title>Leave-app</title>
     <script src="js/jquery.min.js"></script>
+    <script src="js/leave.js"></script>
 </head>
+
 <body>
+
+    <div id="left" style="float:left; width:50%;"> 
+        <br>Login<br>
+        <input type="text" id="username" style="width:100%;" placeholder="enter username; emp1/emp2/manager1" >
+        <input type="text" id="role" style="width:100%;"placeholder="enter role; manager/employee" >
+        <button type="button" id="login" >login</button>
+        <br>
+        <br>
+        Create Leave
+        <br>
+        <input type="text" id="startDate" style="width:100%;" placeholder="startDate" >
+        <input type="text" id="endDate" style="width:100%;" placeholder="endDate" >
+        <input type="text" id="leaveType" style="width:100%;" placeholder="leaveType; sick leave, maternity leave, study leave, vacation leave" >
+        <input type="text" id="reason" style="width:100%;" placeholder="reason" >
+        <button type="button" id="createLeave" >createLeave</button>
+        <br>
+        <br>
+        Get Leave
+        <br>
+        <button type="button" id="getLeave" >getLeave</button>
+        <br>
+        <br>
+        Approve Leave
+        <br>
+        <input type="text" id="objectId" style="width:100%;" placeholder="_id; eg 594f239cc8b8b00c3669145d" >
+        <button type="button" id="approveLeave" >approveLeave</button>
+        
+    </div>
+<div id="right" style="float:right; width:50%;overflow-y: auto; height: 100%;">
+    <pre  id="output"></pre>
+</div>
 </body>
+
 </html>

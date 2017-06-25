@@ -9,12 +9,7 @@ var ObjectId = require('mongodb').ObjectID;
 // Connection URL
 var url = 'mongodb://localhost:27017/leave-app';
 
-// Use connect method to connect to the server
-/*MongoClient.connect(url, function(err, db) {
-  assert.equal(null, err);
-  db.close();
-});
-*/
+
 app.use(sessions({
     cookieName: 'session', // cookie name dictates the key name added to the request object
     secret: 'blargadeeblargblarg', // should be a large unguessable string
@@ -26,6 +21,25 @@ app.use(bodyparser.urlencoded({ extended: true }));
 app.use(bodyparser.json({ type: "application/json" }));
 
 app.use(express.static('public'))
+
+// adding sample users to the database
+MongoClient.connect(url, function (err, db) {
+    assert.equal(null, err);
+    var data = new Object();
+    data.role = "manager"
+    data.username = "manager1"
+    db.collection("user").update(data, { $set: data }, { upsert: true }, function (err, r) {
+    })
+    data.role = "employee"
+    data.username = "emp1"
+    db.collection("user").update(data, { $set: data }, { upsert: true }, function (err, r) {
+    })
+    data.role = "employee"
+    data.username = "emp2"
+    db.collection("user").update(data, { $set: data }, { upsert: true }, function (err, r) {
+    })
+    db.close();
+});
 
 
 
@@ -118,19 +132,19 @@ app.put("/approveLeave", function (req, res) {
             getObjectId(approve.objectId, function (id) {
                 if (id == null) {
                     obj.result = "invalid objectId";
-                    res.status(400).send(obj);
+                    res.send(obj);
                 }
                 else {
                     MongoClient.connect(url, function (err, db) {
                         assert.equal(null, err);
-                        db.collection("leave").updateOne({ _id: id }, { $set: { approvalStatus: "accepted", approvedAt: Date() } }, function (err, r) { //updating using object id
+                        db.collection("leave").updateOne({ _id: id }, { $set: { approvalStatus: "approved", approvedAt: Date() } }, function (err, r) { //updating using object id
                             if (r.modifiedCount == 1) {
                                 obj.result = "successful";
                                 res.send(obj);
                             }
                             else {
                                 obj.result = "invalid objectId";
-                                res.status(400).send(obj);
+                                res.send(obj);
                             }
                         })
                         db.close();
@@ -176,7 +190,6 @@ app.get("/getLeave", function (req, res) {
 })
 
 /*helper functions */
-
 function getObjectId(id, func) {
     try { //to catch exception throw by invalid ObjectId
         var id = ObjectId(id);
@@ -186,7 +199,6 @@ function getObjectId(id, func) {
         func(null);
     }
 }
-/***** */
 
 
 app.listen(3000, function () {

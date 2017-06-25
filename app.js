@@ -143,12 +143,37 @@ app.put("/approveLeave", function (req, res) {
             res.status(400).send(obj);
         }
     }
-    else{
+    else {
         obj.result = "unauthorized access"
-        res.status(401).send(obj);        
+        res.status(401).send(obj);
     }
 })
 
+app.get("/getLeave", function (req, res) {
+    var obj = new Object();
+    if (req.session.role == "manager") {
+        MongoClient.connect(url, function (err, db) {
+            assert.equal(null, err);
+            db.collection("leave").find().toArray(function (err, r) { //querying the database
+                res.send(r);
+            })
+            db.close();
+        });
+    }
+    else if (req.session.role == "employee") {
+        MongoClient.connect(url, function (err, db) {
+            assert.equal(null, err);
+            db.collection("leave").find({ requestBy: req.session.username }).toArray(function (err, r) { //querying the database
+                res.send(r);
+            })
+            db.close();
+        });
+    }
+    else {
+        obj.result = "unauthorized access"
+        res.status(401).send(obj);
+    }
+})
 
 /*helper functions */
 

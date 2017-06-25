@@ -24,36 +24,89 @@ app.use(sessions({
 app.use(bodyparser.urlencoded({ extended: true }));
 app.use(bodyparser.json({ type: "application/json" }));
 
-
-
 app.use(express.static('public'))
+
+
+
 /*  
     "/login" is a post request used for initial authentication and 
     to set session if successfully authenticated
     "/login" takes json data in the form of
-    { username: 'user', role: 'manager' }
+    { username: 'user', role: 'manager' } or { username: 'user', role: 'employee' }
     response in the form of {result:"successful"}/{result:"unsuccessful"}
 */
-app.post("/login", function (req, res) {    
+app.post("/login", function (req, res) {
     var login = req.body;
     var obj = new Object();
-    MongoClient.connect(url, function (err, db) {
-        assert.equal(null, err);
-        db.collection("user").find(login).toArray(function (err, r) { //querying the database
-            if (r.length == 0) { 
-                obj.result = "unsuccessful";
-                res.send(obj);
+    if (login.hasOwnProperty('username') && login.hasOwnProperty('role')) { //validating data paramerters
+        MongoClient.connect(url, function (err, db) {
+            assert.equal(null, err);
+            db.collection("user").find(login).toArray(function (err, r) { //querying the database
+                if (r.length == 0) {
+                    obj.result = "unsuccessful";
+                    res.send(obj);
+                }
+                else {
+                    req.session.username = login.username;  //setting session
+                    req.session.role = login.role;
+                    obj.result = "successful";
+                    res.send(obj);
+                }
+
+            })
+            db.close();
+        });
+    }
+    else {
+        obj.result = "invalid data parameters";
+        res.status(400).send(obj);
+    }
+})
+/*
+    "/createLeave" is a post request to create leave by the employees
+    "/createLeave" takes json data in the form of {"startDate":ddmmyyyy, "endDate":ddmmyyyy, "leaveType":"","reason":""}
+    here leaveType can be "sick leave","maternity leave", "vacation leave" or "study leave"
+*/
+app.post("/createLeave", function (req, res) {
+    var obj = new Object();
+    var leave = req.body;
+    if (req.session.role == "employee") {   //validating authentication and role
+        if (leave.hasOwnProperty("startDate") && leave.hasOwnProperty("endDate") && leave.hasOwnProperty("leaveType") && leave.hasOwnProperty("reason")) {
+            if (leave.leaveType == "sick leave" || leave.leaveType == "maternity leave" || leave.leaveType == "study leave" || leave.leaveType == "vacation leave") {   //validating leaveType
+                leave.requestBy = req.session.username;
+                leave.requestedAt = Date();
+                leave.approvalStatus = "pending";
+                MongoClient.connect(url, function (err, db) {
+                    assert.equal(null, err);
+                    db.collection("leave").insertOne(leave, function (err, r) {
+                        assert.equal(null, err);
+                        assert.equal(1, r.insertedCount);
+                        if (r.insertedCount == 1) {
+                            obj.result = "successful";
+                            res.send(obj);
+                        }
+                        else {
+                            obj.result = "error";
+                            res.send(obj);
+                        }
+                    });
+                    db.close();
+                });
             }
             else {
-                req.session.username = login.username;  //setting session
-                req.session.role = login.role;
-                obj.result = "successful";
+                obj.result = "invalid leaveType";
                 res.send(obj);
             }
-
-        })
-        db.close();
-    });
+        }
+        else {
+            obj.result = "invalid data parameters";
+            res.status(400).send(obj);
+        }
+    }
+    else {
+        obj.result = "unauthorized access"
+        res.status(401).send(obj);
+    }
 })
 
 app.listen(3000, function () {

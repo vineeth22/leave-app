@@ -4,6 +4,7 @@ var bodyparser = require("body-parser")
 var sessions = require("client-sessions");
 var MongoClient = require('mongodb').MongoClient
     , assert = require('assert');
+var ObjectId = require('mongodb').ObjectID;
 
 // Connection URL
 var url = 'mongodb://localhost:27017/leave-app';
@@ -71,7 +72,7 @@ app.post("/createLeave", function (req, res) {
     var obj = new Object();
     var leave = req.body;
     if (req.session.role == "employee") {   //validating authentication and role
-        if (leave.hasOwnProperty("startDate") && leave.hasOwnProperty("endDate") && leave.hasOwnProperty("leaveType") && leave.hasOwnProperty("reason")) {
+        if (leave.hasOwnProperty("startDate") && leave.hasOwnProperty("endDate") && leave.hasOwnProperty("leaveType") && leave.hasOwnProperty("reason")) { //validating data paramerters
             if (leave.leaveType == "sick leave" || leave.leaveType == "maternity leave" || leave.leaveType == "study leave" || leave.leaveType == "vacation leave") {   //validating leaveType
                 leave.requestBy = req.session.username;
                 leave.requestedAt = Date();
@@ -108,6 +109,60 @@ app.post("/createLeave", function (req, res) {
         res.status(401).send(obj);
     }
 })
+
+app.put("/approveLeave", function (req, res) {
+    var obj = new Object();
+    var approve = req.body;
+    if (req.session.role == "manager") {   //validating authentication and role
+        if (approve.hasOwnProperty("objectId")) {
+            getObjectId(approve.objectId, function (id) {
+                if (id == null) {
+                    obj.result = "invalid objectId";
+                    res.status(400).send(obj);
+                }
+                else {
+                    MongoClient.connect(url, function (err, db) {
+                        assert.equal(null, err);
+                        db.collection("leave").updateOne({ _id: id }, { $set: { approvalStatus: "accepted", approvedAt: Date() } }, function (err, r) { //updating using object id
+                            if (r.modifiedCount == 1) {
+                                obj.result = "successful";
+                                res.send(obj);
+                            }
+                            else {
+                                obj.result = "invalid objectId";
+                                res.status(400).send(obj);
+                            }
+                        })
+                        db.close();
+                    });
+                }
+            });
+        }
+        else {
+            obj.result = "invalid data parameters";
+            res.status(400).send(obj);
+        }
+    }
+    else{
+        obj.result = "unauthorized access"
+        res.status(401).send(obj);        
+    }
+})
+
+
+/*helper functions */
+
+function getObjectId(id, func) {
+    try { //to catch exception throw by invalid ObjectId
+        var id = ObjectId(id);
+        func(id);
+    }
+    catch (e) {
+        func(null);
+    }
+}
+/***** */
+
 
 app.listen(3000, function () {
     console.log('App listening on port 3000')

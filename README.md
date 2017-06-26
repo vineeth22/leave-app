@@ -7,7 +7,7 @@ Node.js MongoDB
 
 **Installation**
 
-npm init
+npm install
 
 **Running**
 

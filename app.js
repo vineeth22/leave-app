@@ -6,7 +6,6 @@ var MongoClient = require('mongodb').MongoClient
     , assert = require('assert');
 var ObjectId = require('mongodb').ObjectID;
 
-// Connection URL
 var url = 'mongodb://localhost:27017/leave-app';
 
 
